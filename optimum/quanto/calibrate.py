@@ -21,9 +21,8 @@ from torch.nn.modules.module import (
 )
 from torch.overrides import TorchFunctionMode
 
-from .nn import QModuleMixin
+from .nn import QAttentionModuleMixin, QModuleMixin
 from .tensor import QBytesTensor, QTensor, axis_to_dim, dtype_info, qint8, qtype
-
 
 __all__ = ["Calibration", "absmax_scale"]
 
@@ -34,7 +33,9 @@ def _updated_scale(scale, new_scale, momentum):
     return momentum * scale + new_scale * (1.0 - momentum)
 
 
-def absmax_scale(base: torch.Tensor, qtype: qtype = qint8, axis: Optional[int] = None) -> torch.Tensor:
+def absmax_scale(
+    base: torch.Tensor, qtype: qtype = qint8, axis: Optional[int] = None
+) -> torch.Tensor:
     """Evaluate the quantization scale using the absmax algorithm.
 
     The Absolute Maximum quantization algorithm is a symmetrical quantization
@@ -114,7 +115,10 @@ class Calibration(TorchFunctionMode):
         self.post_handle.remove()
 
     def calibrate_input(self, module: torch.nn.Module, input, momentum: float = 0.9):
-        if isinstance(module, QModuleMixin) and module.activation_qtype is not None:
+        if (
+            isinstance(module, (QModuleMixin, QAttentionModuleMixin))
+            and module.activation_qtype is not None
+        ):
             input = input[0]
             if isinstance(input, QBytesTensor):
                 # Just adopt the maximum scale of the input
@@ -131,7 +135,10 @@ class Calibration(TorchFunctionMode):
         input,
         output,
     ):
-        if isinstance(module, (QModuleMixin)) and module.activation_qtype is not None:
+        if (
+            isinstance(module, (QModuleMixin, QAttentionModuleMixin))
+            and module.activation_qtype is not None
+        ):
             # Re-evaluate raw module output
             qoutput = module.qforward(input[0])
             if isinstance(qoutput, QBytesTensor):
@@ -148,14 +155,17 @@ class Calibration(TorchFunctionMode):
         else:
             if self.streamline:
                 for name, child in module.named_children():
-                    if isinstance(child, QModuleMixin) and child.activation_qtype is not None:
+                    if (
+                        isinstance(child, (QModuleMixin, QAttentionModuleMixin))
+                        and child.activation_qtype is not None
+                    ):
                         qactivations_required = self.modules_qactivations.get(child, False)
                         if not qactivations_required:
                             # Disable activations for this child as its outputs are only consumed by incompatible functions.
                             child.activation_qtype = None
             if self.debug:
                 for name, child in module.named_children():
-                    if isinstance(child, QModuleMixin):
+                    if isinstance(child, (QModuleMixin)):
                         classname = child.__class__.__name__
                         trace = f"{name}({classname}) activations are"
                         if child.activation_qtype is None:
