@@ -165,7 +165,7 @@ class Calibration(TorchFunctionMode):
                             child.activation_qtype = None
             if self.debug:
                 for name, child in module.named_children():
-                    if isinstance(child, (QModuleMixin)):
+                    if isinstance(child, (QModuleMixin, QAttentionModuleMixin)):
                         classname = child.__class__.__name__
                         trace = f"{name}({classname}) activations are"
                         if child.activation_qtype is None:
