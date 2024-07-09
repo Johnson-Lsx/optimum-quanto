@@ -20,7 +20,7 @@ authors = [{ name = 'David Corvoysier' }]
 maintainers = [
     {name = "HuggingFace Inc. Special Ops Team", email="hardware@huggingface.co"},
 ]
-dependencies = ['torch>=2.2.0', 'ninja', 'numpy', 'safetensors']
+dependencies = ['torch>=2.3.0', 'ninja', 'numpy', 'safetensors']
 license = { text = 'Apache-2.0' }
 readme = 'README.md'
 dynamic = ['version']
@@ -30,7 +30,7 @@ homepage = 'https://github.com/huggingface/optimum-quanto'
 
 [project.optional-dependencies]
 dev = ['pytest', 'ruff', 'black']
-examples = ['torchvision', 'transformers==4.40.2', 'datasets', 'accelerate', 'scipy']
+examples = ['torchvision', 'transformers', 'datasets', 'accelerate', 'scipy']
 
 [tool.setuptools.packages.find]
 where = ["."]
