@@ -14,8 +14,7 @@
 
 from torch import device as torch_device
 
-from .nn import QModuleMixin, quantize_module
-
+from .nn import QAttentionModuleMixin, QModuleMixin, quantize_module
 
 __all__ = ["quantize", "freeze", "requantize"]
 
@@ -63,5 +62,5 @@ def requantize(model, state_dict):
 
 def freeze(model):
     for name, m in model.named_modules():
-        if isinstance(m, QModuleMixin):
+        if isinstance(m, QModuleMixin) or isinstance(m, QAttentionModuleMixin):
             m.freeze()
